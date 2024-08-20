@@ -9,8 +9,9 @@ All methods return response object from Client.request method
 
 
 ## Requirements
-- Django
-- djangorestframework
+- python = "^3.10"
+- django = "5.0.4"
+- djangorestframework = "^3.15.1"
 
 
 ## _test_create
