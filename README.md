@@ -10,7 +10,7 @@ All methods return response object from Client.request method
 
 ## Requirements
 - python = "^3.10"
-- django = "5.0.4"
+- django = "^5.0.2"
 - djangorestframework = "^3.15.1"
 
 

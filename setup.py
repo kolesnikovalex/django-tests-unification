@@ -13,7 +13,7 @@ setup(
     description='Packages for unification django tests process',
     long_description='Packages for unification django tests process',
     install_requires=[
-        "Django==5.0.4",
-        "djangorestframework==3.15.1",
+        "Django=^5.0.2",
+        "djangorestframework=^3.15.1",
     ],
 )
