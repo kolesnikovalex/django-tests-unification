@@ -22,3 +22,39 @@ class TestClientMixin(APITestCase):
         response = self.client.post(url, **data)
         self.assertEqual(response.status_code, status_code)
         return response
+
+    def _test_get(
+            self, url, queryset=None, pagination=False, status_code=status.HTTP_200_OK, **kwargs):
+        """ Test get request
+            params:
+                url: url to test
+                queryset: if queryset - will assert response.data with queryset.count()
+                pagination: if pagination
+                    provide result and count keys names in kwargs
+                    kwargs['results'] = 'results'
+                    try to get data from response.data[kwargs['results']]
+                    try to get count from response.data[kwargs['count']]
+
+        """
+
+        response = self.client.get(url, headers=self.headers)
+        self.assertEqual(response.status_code, status_code)
+        if status_code == status.HTTP_200_OK:
+            data = response.data
+            count = None
+            if pagination:
+                results = kwargs.get('results', 'results')
+                count = kwargs.get('results', 'count')
+                try:
+                    data = response.data[results]
+                    count = response.data[count]
+                except KeyError:
+                    return
+
+            if queryset is not None:
+                self.assertEqual(len(data), queryset.count())
+                if count:
+                    self.assertEqual(count, queryset.count())
+            else:
+                self.assertTrue(len(data) > 0)
+        return response
