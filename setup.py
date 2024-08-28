@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='Django tests unification',
+    name='django_tests_unification',
     version='0.1.0',
     author='Aleksandr',
     author_email='kolesnikov.alex.nik@gmail.com',
