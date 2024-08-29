@@ -7,8 +7,14 @@ class TestClientMixin(APITestCase):
     date_format = '%Y-%m-%d'
     headers = None
 
+    def __check_attr(self, obj, k, v):
+        attr = getattr(obj, k)
+        if isinstance(attr, datetime.date):
+            attr = attr.strftime(self.date_format)
+        self.assertEqual(v, attr)
+
     def _test_create(
-            self, url: str, payload: dict, req_format=None, status_code=status.HTTP_201_CREATED):
+            self, url: str, payload: dict, req_format='json', status_code=status.HTTP_201_CREATED):
         """ Test post request
             format: json, multipart, etc
         """
@@ -67,4 +73,45 @@ class TestClientMixin(APITestCase):
         self.assertEqual(response.status_code, code)
         if queryset:
             self.assertFalse(queryset.exists())
+        return response
+
+    def _test_update(self, url: str, payload: dict, queryset, method='patch'):
+        """
+        Test update request
+        allows only PATCH and PUT methods
+        assert status code
+        if queryset is not None - try to check that instance attribute was change
+        """
+
+        if method not in ('patch', 'put'):
+            raise ValueError('method must be "patch" or "put"')
+
+        if method == 'put':
+            response = self.client.put(
+                url, headers=self.headers, data=payload, format='json')
+        else:
+            response = self.client.patch(
+                url, headers=self.headers, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        if queryset:
+            obj = queryset.first()
+            for k, v in payload.items():
+                try:
+                    atr = getattr(obj._meta.model, k)
+                    related_model = getattr(atr.field, 'related_model', None)
+                    if related_model and isinstance(v, dict):
+                        related_obj = related_model.objects.filter(
+                            id=getattr(obj, atr.field.attname)
+                        ).first()
+
+                        self.assertIsNotNone(related_obj)
+
+                        for rel_k, rel_v in v.items():
+                            self.__check_attr(related_obj, rel_k, rel_v)
+                    else:
+                        self.__check_attr(obj, k, v)
+
+                except AttributeError:
+                    continue
         return response
