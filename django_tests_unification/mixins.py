@@ -11,7 +11,6 @@ class TestClientMixin(APITestCase):
             self, url: str, payload: dict, req_format=None, status_code=status.HTTP_201_CREATED):
         """ Test post request
             format: json, multipart, etc
-            headers: your http headers
         """
 
         data = {
@@ -57,4 +56,15 @@ class TestClientMixin(APITestCase):
                     self.assertEqual(count, queryset.count())
             else:
                 self.assertTrue(len(data) > 0)
+        return response
+
+    def _test_delete(self, url, queryset=None, code=status.HTTP_204_NO_CONTENT):
+        """ Test delete request
+            assert status code
+            assert not queryset.exists() if queryset is not None
+        """
+        response = self.client.delete(url, headers=self.headers)
+        self.assertEqual(response.status_code, code)
+        if queryset:
+            self.assertFalse(queryset.exists())
         return response
