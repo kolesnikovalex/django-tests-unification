@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 import datetime
@@ -75,10 +77,11 @@ class TestClientMixin(APITestCase):
             self.assertFalse(queryset.exists())
         return response
 
-    def _test_update(self, url: str, payload: dict, queryset, method='patch'):
+    def _test_update(self, url: str, payload: str, queryset, method='patch'):
         """
         Test update request
         allows only PATCH and PUT methods
+        payload = json.dumps(dict_obj)
         assert status code
         if queryset is not None - try to check that instance attribute was change
         """
@@ -87,15 +90,17 @@ class TestClientMixin(APITestCase):
             raise ValueError('method must be "patch" or "put"')
 
         if method == 'put':
-            response = self.client.put(
-                url, headers=self.headers, data=payload, format='json')
+            response = self.client.put(url, headers=self.headers, data=payload)
         else:
-            response = self.client.patch(
-                url, headers=self.headers, data=payload, format='json')
+            response = self.client.patch(url, headers=self.headers, data=payload)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         if queryset:
             obj = queryset.first()
+
+            payload = json.loads(payload)
+
             for k, v in payload.items():
                 try:
                     atr = getattr(obj._meta.model, k)
