@@ -69,8 +69,8 @@ class TestClientMixin(APITestCase):
                     count = response.data[count]
                 except KeyError:
                     return
-            counter = page_size if page_size else queryset.count()
             if queryset is not None:
+                counter = page_size if page_size else queryset.count()
                 self.assertEqual(len(data), counter)
                 if count:
                     self.assertEqual(count, queryset.count())
