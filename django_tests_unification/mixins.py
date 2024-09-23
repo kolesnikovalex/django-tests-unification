@@ -1,8 +1,10 @@
 import json
-
+import logging
 from rest_framework import status
 from rest_framework.test import APITestCase
 import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class TestClientMixin(APITestCase):
@@ -14,6 +16,13 @@ class TestClientMixin(APITestCase):
         if isinstance(attr, datetime.date):
             attr = attr.strftime(self.date_format)
         self.assertEqual(v, attr)
+
+    def __check_status_code(self, response, status_code):
+        if response.status_code != status_code:
+            try:
+                logger.error(response.data)
+            except:
+                pass
 
     def _test_create(
             self, url: str, payload: dict, req_format='json', status_code=status.HTTP_201_CREATED):
@@ -27,11 +36,13 @@ class TestClientMixin(APITestCase):
             'headers': self.headers
         }
         response = self.client.post(url, **data)
+        self.__check_status_code(response, status_code)
         self.assertEqual(response.status_code, status_code)
         return response
 
     def _test_get(
-            self, url, queryset=None, pagination=False, status_code=status.HTTP_200_OK, **kwargs):
+            self, url, queryset=None, pagination=False, status_code=status.HTTP_200_OK,
+            page_size=None, **kwargs):
         """ Test get request
             params:
                 url: url to test
@@ -45,6 +56,7 @@ class TestClientMixin(APITestCase):
         """
 
         response = self.client.get(url, headers=self.headers)
+        self.__check_status_code(response, status_code)
         self.assertEqual(response.status_code, status_code)
         if status_code == status.HTTP_200_OK:
             data = response.data
@@ -57,9 +69,9 @@ class TestClientMixin(APITestCase):
                     count = response.data[count]
                 except KeyError:
                     return
-
+            counter = page_size if page_size else queryset.count()
             if queryset is not None:
-                self.assertEqual(len(data), queryset.count())
+                self.assertEqual(len(data), counter)
                 if count:
                     self.assertEqual(count, queryset.count())
             else:
@@ -94,6 +106,7 @@ class TestClientMixin(APITestCase):
         else:
             response = self.client.patch(url, headers=self.headers, data=payload)
 
+        self.__check_status_code(response, status.HTTP_200_OK)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         if queryset:
